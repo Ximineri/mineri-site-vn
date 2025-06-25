@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+function initializeApp() {
     const contractData = {
         header: `<h2>HỢP ĐỒNG THUÊ CHÍNH</h2><p><strong>GIỮA CÁC BÊN GỒM :</strong></p><p><strong>BÊN CHO THUÊ (CHỦ SỞ HỮU) :</strong><br/>[HỌ VÀ TÊN ĐẦY ĐỦ CỦA CHỦ SỞ HỮU]<br/>[ĐỊA CHỈ ĐẦY ĐỦ CỦA CHỦ SỞ HỮU]<br/>[SỐ ĐIỆN THOẠI CỦA CHỦ SỞ HỮU]<br/>[ĐỊA CHỈ EMAIL CỦA CHỦ SỞ HỮU]</p><p>VÀ</p><p><strong>BÊN THUÊ CHÍNH :</strong><br/>Công ty Thăng Long Event<br/>Đại diện bởi Ông LERALE Alexis, Người Sáng Lập & Giám Đốc Điều Hành của MINĒRI</p>`,
         articles: [
@@ -37,44 +37,46 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = html;
     }
     
-    function initializePage() {
-        buildContractHTML();
-        document.querySelectorAll('.accordion-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const content = header.nextElementSibling;
-                const isActive = content.style.maxHeight;
-                if (isActive) {
-                    content.style.maxHeight = null;
-                    header.querySelector('.plus-minus').textContent = '+';
-                } else {
-                    content.style.maxHeight = content.scrollHeight + "px";
-                    header.querySelector('.plus-minus').textContent = '-';
-                }
-            });
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            const isActive = content.style.maxHeight;
+            if (isActive) {
+                content.style.maxHeight = null;
+                header.querySelector('.plus-minus').textContent = '+';
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                header.querySelector('.plus-minus').textContent = '-';
+            }
         });
-        const occupancySlider = document.getElementById('occupancyRate');
-        const nightlyRateSlider = document.getElementById('nightlyRate');
-        function calculateFinancials() {
-            if (!occupancySlider) return;
-            const occupancy = parseInt(occupancySlider.value);
-            const rate = parseInt(nightlyRateSlider.value);
-            document.getElementById('occupancyValue').textContent = occupancy;
-            document.getElementById('nightlyRateValue').textContent = rate;
-            const nPM=30, eR=4000, fC=480, oC=3380, oFR=3000, oCR=0.15;
-            const oN = nPM * (occupancy / 100);
-            const rR = oN * rate;
-            const tGR = rR + eR;
-            const oS = oFR + (tGR * oCR);
-            const tOC = oC + (oN * fC);
-            const mP = tGR - oS - tOC;
-            document.getElementById('simGrossRevenue').textContent = '$' + Math.round(tGR).toLocaleString();
-            document.getElementById('simOwnerShare').textContent = '$' + Math.round(oS).toLocaleString();
-            document.getElementById('simMineriProfit').textContent = '$' + Math.round(mP).toLocaleString();
-        }
-        if (occupancySlider) {
-            [occupancySlider, nightlyRateSlider].forEach(s => s.addEventListener('input', calculateFinancials));
-            calculateFinancials();
-        }
+    });
+
+    const occupancySlider = document.getElementById('occupancyRate');
+    const nightlyRateSlider = document.getElementById('nightlyRate');
+    function calculateFinancials() {
+        if (!occupancySlider) return;
+        const occupancy = parseInt(occupancySlider.value);
+        const rate = parseInt(nightlyRateSlider.value);
+        document.getElementById('occupancyValue').textContent = occupancy;
+        document.getElementById('nightlyRateValue').textContent = rate;
+        const nPM=30, eR=4000, fC=480, oC=3380, oFR=3000, oCR=0.15;
+        const oN = nPM * (occupancy / 100);
+        const rR = oN * rate;
+        const tGR = rR + eR;
+        const oS = oFR + (tGR * oCR);
+        const tOC = oC + (oN * fC);
+        const mP = tGR - oS - tOC;
+        document.getElementById('simGrossRevenue').textContent = '$' + Math.round(tGR).toLocaleString();
+        document.getElementById('simOwnerShare').textContent = '$' + Math.round(oS).toLocaleString();
+        document.getElementById('simMineriProfit').textContent = '$' + Math.round(mP).toLocaleString();
+    }
+    if (occupancySlider) {
+        [occupancySlider, nightlyRateSlider].forEach(s => s.addEventListener('input', calculateFinancials));
+        calculateFinancials();
+    }
+
+    function initializeContract() {
+        buildContractHTML();
         const contractOptions = document.querySelectorAll('#contract input[type="radio"]');
         const summaryList = document.getElementById('summary-list');
         function updateSummary() {
@@ -101,40 +103,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         contractOptions.forEach(option => option.addEventListener('change', updateSummary));
         updateSummary();
-        const printButton = document.getElementById('printButton');
-        if(printButton) {
-            printButton.addEventListener('click', () => {
-                let printableHTML = `<h1>HỢP ĐỒNG THUÊ CHÍNH</h1>${contractData.header}`;
-                contractData.articles.forEach(article => {
-                    printableHTML += `<h3>${article.title}</h3>`;
-                    if (article.options) {
-                        printableHTML += article.content;
-                        article.options.forEach(optionGroup => {
-                            const selectedOption = document.querySelector(`input[name="${optionGroup.name}"]:checked`);
-                            printableHTML += `<h4>${optionGroup.legend}</h4>`;
-                            if (selectedOption) {
-                                const choiceData = optionGroup.choices.find(c => c.value === selectedOption.value);
-                                printableHTML += `<div style="border:1px solid #ccc; padding:10px;"><strong>${choiceData.title}</strong><p>${choiceData.text}</p></div>`;
-                            } else {
-                                printableHTML += `<p><em>Chưa chọn tùy chọn cho mục này.</em></p>`;
-                            }
-                        });
-                    } else {
-                        printableHTML += article.content;
-                    }
-                });
-                printableHTML += contractData.footer;
-
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(`<html><head><title>MINĒRI - Hợp Đồng Thuê Chính</title><style>body { font-family: 'Times New Roman', Times, serif; line-height: 1.5; margin: 2cm; } h1, h2, h3, h4, strong { font-family: Arial, sans-serif; } h3 { color: #770099; border-top: 1px solid #ccc; padding-top: 1em; margin-top: 1em;} p { margin-top: 0.5em; margin-bottom: 0.5em; }</style></head><body>${printableHTML}</body></html>`);
-                printWindow.document.close();
-                printWindow.focus();
-                setTimeout(() => { printWindow.print(); }, 500);
-            });
-        }
     }
-    window.addEventListener('load', initializeApp);
-});
-</script>
-</body>
-</html>
+    initializeContract();
+
+    const printButton = document.getElementById('printButton');
+    if(printButton) {
+        printButton.addEventListener('click', () => {
+            let printableHTML = `<h1>HỢP ĐỒNG THUÊ CHÍNH</h1>${contractData.header}`;
+            contractData.articles.forEach(article => {
+                printableHTML += `<h3>${article.title}</h3>`;
+                if (article.options) {
+                    printableHTML += article.content;
+                    article.options.forEach(optionGroup => {
+                        const selectedOption = document.querySelector(`input[name="${optionGroup.name}"]:checked`);
+                        printableHTML += `<h4>${optionGroup.legend}</h4>`;
+                        if (selectedOption) {
+                            const choiceData = optionGroup.choices.find(c => c.value === selectedOption.value);
+                            printableHTML += `<div style="border:1px solid #ccc; padding:10px;"><strong>${choiceData.title}</strong><p>${choiceData.text}</p></div>`;
+                        } else {
+                            printableHTML += `<p><em>Chưa chọn tùy chọn cho mục này.</em></p>`;
+                        }
+                    });
+                } else {
+                    printableHTML += article.content;
+                }
+            });
+            printableHTML += contractData.footer;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`<html><head><title>MINĒRI - Hợp Đồng Thuê Chính</title><style>body { font-family: 'Times New Roman', Times, serif; line-height: 1.5; margin: 2cm; } h1, h2, h3, h4, strong { font-family: Arial, sans-serif; } h3 { color: #770099; border-top: 1px solid #ccc; padding-top: 1em; margin-top: 1em;} p { margin-top: 0.5em; margin-bottom: 0.5em; }</style></head><body>${printableHTML}</body></html>`);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); }, 500);
+        });
+    }
+}
+window.addEventListener('load', initializeApp);
